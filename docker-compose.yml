@@ -1,0 +1,24 @@
+# Stack Docker cho HealthTrack.
+#
+# Vì đã chọn Supabase Cloud (managed) làm backend dữ liệu (Postgres + Auth +
+# Realtime), ta KHÔNG cần tự chạy Postgres/GoTrue/Realtime bằng Docker.
+# Container duy nhất cần thiết ở đây là "mqtt-bridge": service Node.js nhận dữ
+# liệu MQTT từ 2 node ESP32 và ghi thẳng vào Postgres của Supabase, đồng thời
+# vẫn phát WebSocket/REST cho web React (healthtrack-frontend) như trước.
+#
+# Chạy:
+#   1. cp healthtrack-backend/.env.example healthtrack-backend/.env
+#      rồi điền DATABASE_URL lấy từ Supabase Dashboard.
+#   2. docker compose up -d --build
+
+services:
+  mqtt-bridge:
+    build:
+      context: ./healthtrack-backend
+    container_name: healthtrack-mqtt-bridge
+    restart: unless-stopped
+    env_file:
+      - ./healthtrack-backend/.env
+    ports:
+      - "8080:8080" # REST API cho web React
+      - "3001:3001" # WebSocket realtime cho web React
